@@ -85,10 +85,10 @@ class TimelineController @JvmOverloads constructor(
     init {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        val padStart = context.dp(12f).roundToInt()
-        val padTop = context.dp(12f).roundToInt()
-        val padEnd = context.dp(20f).roundToInt()
-        val padBottom = context.dp(12f).roundToInt()
+        val padStart = context.dp(8f).roundToInt()
+        val padTop = context.dp(6f).roundToInt()
+        val padEnd = context.dp(15f).roundToInt()
+        val padBottom = context.dp(6f).roundToInt()
         setPadding(padStart, padTop, padEnd, padBottom)
 
         val iconSize = context.dp(56f).roundToInt()
@@ -101,14 +101,14 @@ class TimelineController @JvmOverloads constructor(
             isIndeterminate = true
             indicatorSize = iconSize
             indicatorInset = 0
-            trackThickness = context.dp(3f).roundToInt()
+            trackThickness = context.dp(2f).roundToInt()
             trackCornerRadius = context.dp(2f).roundToInt()
             setIndicatorColor(ContextCompat.getColor(context, R.color.play_ring_progress))
             trackColor = ContextCompat.getColor(context, R.color.play_ring_track)
             visibility = View.GONE
         }
 
-        val buttonSize = context.dp(44f).roundToInt()
+        val buttonSize = context.dp(42f).roundToInt()
         val buttonPadding = context.dp(10f).roundToInt()
         playButton = ImageButton(context).apply {
             layoutParams = FrameLayout.LayoutParams(buttonSize, buttonSize, Gravity.CENTER)
@@ -287,7 +287,7 @@ private class RulerView(context: Context) : View(context) {
     }
     private val hourLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.timeline_label)
-        textSize = dp(13f)
+        textSize = dp(11f)
         textAlign = Paint.Align.CENTER
     }
     private val knobPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -296,7 +296,7 @@ private class RulerView(context: Context) : View(context) {
     }
     private val nowTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.timeline_now)
-        textSize = dp(13f)
+        textSize = dp(11f)
         textAlign = Paint.Align.CENTER
         isFakeBoldText = true
     }
@@ -308,7 +308,7 @@ private class RulerView(context: Context) : View(context) {
     private var isDragging = false
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val desiredHeight = dp(64f).roundToInt() + paddingTop + paddingBottom
+        val desiredHeight = dp(44f).roundToInt() + paddingTop + paddingBottom
         val height = resolveSize(desiredHeight, heightMeasureSpec)
         val width = MeasureSpec.getSize(widthMeasureSpec)
         setMeasuredDimension(width, height)
@@ -330,9 +330,9 @@ private class RulerView(context: Context) : View(context) {
         super.onDraw(canvas)
         if (width <= 0) return
 
-        val trackY = paddingTop + dp(26f)
-        val tickTop = trackY + dp(6f)
-        val hourLabelY = tickTop + majorTickLength + dp(14f)
+        val trackY = paddingTop + dp(22f)
+        val tickTop = trackY + dp(4f)
+        val hourLabelY = tickTop + majorTickLength + dp(10f)
 
         val startX = paddingLeft + horizontalInset
         val endX = width - paddingRight - horizontalInset
@@ -362,7 +362,7 @@ private class RulerView(context: Context) : View(context) {
         // Persistent "Now" tick + label: always shown at nowProgress, independent
         // of wherever the scrub knob currently sits, so "now" stays visible while
         // scrubbing or playing instead of disappearing once the knob moves off it.
-        val labelY = paddingTop + dp(12f)
+        val labelY = paddingTop + dp(8f)
         canvas.drawLine(nowX, tickTop, nowX, tickTop + majorTickLength, nowTickPaint)
         canvas.drawText("Now", nowX, labelY, nowTextPaint)
         canvas.drawCircle(nowX, labelY + dp(6f), dp(1.5f), nowDotPaint)
