@@ -60,7 +60,15 @@ class XweatherAnimator internal constructor(
             style.addSource(RasterSource(sourceId, tileSet, TILE_SIZE))
             style.addLayer(
                 RasterLayer(frameLayerId, sourceId).apply {
-                    setProperties(PropertyFactory.rasterOpacity(0f))
+                    // Tiles are fully preloaded before playback starts (see awaitIdle), so
+                    // there's nothing to visually fade in — the default 300ms
+                    // raster-fade-duration would instead cross-fade every opacity toggle
+                    // in showFrame(), making the sweep look like it's flickering/blinking
+                    // rather than cutting cleanly between frames.
+                    setProperties(
+                        PropertyFactory.rasterOpacity(0f),
+                        PropertyFactory.rasterFadeDuration(0f),
+                    )
                 },
             )
             frameLayerId

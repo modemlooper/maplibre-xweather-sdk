@@ -108,8 +108,8 @@ class TimelineController @JvmOverloads constructor(
             visibility = View.GONE
         }
 
-        val buttonSize = context.dp(42f).roundToInt()
-        val buttonPadding = context.dp(10f).roundToInt()
+        val buttonSize = context.dp(48f).roundToInt()
+        val buttonPadding = context.dp(5f).roundToInt()
         playButton = ImageButton(context).apply {
             layoutParams = FrameLayout.LayoutParams(buttonSize, buttonSize, Gravity.CENTER)
             setBackgroundResource(R.drawable.bg_play_button)
@@ -123,7 +123,7 @@ class TimelineController @JvmOverloads constructor(
         iconFrame.addView(playProgress)
         iconFrame.addView(playButton)
 
-        val rulerMarginStart = context.dp(16f).roundToInt()
+        val rulerMarginStart = context.dp(6f).roundToInt()
         ruler = RulerView(context).apply {
             layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
                 marginStart = rulerMarginStart
