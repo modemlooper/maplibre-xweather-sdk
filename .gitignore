@@ -10,5 +10,4 @@ captures/
 *.apk
 *.aab
 .claude
-sample-app/
-Plan.md
+PLAN.md

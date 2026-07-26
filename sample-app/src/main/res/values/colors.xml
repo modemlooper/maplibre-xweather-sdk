@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="timeline_card_bg">#FFFFFF</color>
+    <color name="timeline_track_elapsed">#1C1C1E</color>
+    <color name="timeline_track_remaining">#D4D4D6</color>
+    <color name="timeline_tick">#B7B7BA</color>
+    <color name="timeline_label">#8E8E93</color>
+    <color name="timeline_now">#F5A623</color>
+    <color name="timeline_knob">#1C1C1E</color>
+    <color name="play_button_bg">#E4E4E6</color>
+    <color name="play_button_icon">#1C1C1E</color>
+    <color name="play_ring_progress">#3D8BFF</color>
+    <color name="play_ring_track">#00E4E4E6</color>
+</resources>

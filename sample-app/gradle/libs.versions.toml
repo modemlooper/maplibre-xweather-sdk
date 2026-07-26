@@ -1,12 +1,12 @@
 [versions]
-agp = "8.5.2"
+agp = "8.13.2"
 kotlin = "2.2.10"
 coreKtx = "1.13.1"
 appcompat = "1.7.0"
 material = "1.12.0"
 maplibre = "13.4.1"
 junit = "4.13.2"
-compose-bom = "2025.07.00"
+compose-bom = "2026.06.01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -16,8 +16,8 @@ maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk", versio
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

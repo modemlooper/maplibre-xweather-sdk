@@ -1,5 +1,6 @@
 package com.xweather.maplibre
 
+import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.layers.RasterLayer
@@ -16,8 +17,11 @@ private const val TILEJSON_VERSION = "2.1.0"
  *
  * Get a [Style] instance via `mapLibreMap.getStyle { style -> ... }` (or the
  * `onStyleLoaded` callback of `setStyle`), then construct this controller.
+ * [mapView] is needed so [animator] can tell when a loaded frame's tiles have
+ * actually finished downloading, rather than just when they've been requested.
  */
 class XweatherMapController(
+    private val mapView: MapView,
     private val style: Style,
     private val config: XweatherConfig,
 ) {
@@ -73,7 +77,7 @@ class XweatherMapController(
     }
 
     /** Starts building a frame-swapping animation/loop for [layer]. */
-    fun animator(layer: XweatherLayer): XweatherAnimator = XweatherAnimator(style, config, layer)
+    fun animator(layer: XweatherLayer): XweatherAnimator = XweatherAnimator(mapView, style, config, layer)
 
     private fun sourceId(layer: XweatherLayer) = "xweather-${layer.code}-source"
     private fun layerId(layer: XweatherLayer) = "xweather-${layer.code}-layer"

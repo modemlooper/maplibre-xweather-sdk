@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Xweather MapLibre Sample</string>
+
+    <!-- xweather_client_id and xweather_client_secret are injected at build time
+         from local.properties (see build.gradle.kts) so they are not committed. -->
+
+    <string name="demo_style_url" translatable="false">https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json</string>
+
+    <string name="timeline_play">Play timeline</string>
+</resources>

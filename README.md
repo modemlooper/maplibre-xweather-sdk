@@ -63,7 +63,7 @@ bundles credentials itself.
 
 ```kotlin
 mapLibreMap.getStyle { style ->
-    val xweatherMap = XweatherMapController(style, config)
+    val xweatherMap = XweatherMapController(mapView, style, config)
 
     xweatherMap.addLayer(XweatherLayer.Radar.Standard)
 }
@@ -71,7 +71,9 @@ mapLibreMap.getStyle { style ->
 
 `XweatherMapController` wraps a MapLibre `Style` you already own — it adds a
 raster `Source`/`Layer` pair per weather layer and injects the required
-Xweather attribution automatically, so you don't need to add it yourself.
+Xweather attribution automatically, so you don't need to add it yourself. It
+also takes your `MapView` so `animator()` (below) can tell when a layer's
+tiles have actually finished downloading, not just when they were requested.
 
 ### 3. Add, remove, and reorder layers
 
@@ -116,7 +118,7 @@ xweatherMap.addLayer(XweatherLayer.Custom("some-layer-code"))
 ### 5. Animate a layer (frame loop)
 
 Xweather's raster tiles have no built-in timeline, so `XweatherAnimator`
-pre-loads one source/layer per time offset and cross-fades between them:
+pre-loads one source/layer per time offset and toggles opacity between them:
 
 ```kotlin
 xweatherMap.animator(XweatherLayer.Radar.Standard)
@@ -127,6 +129,16 @@ xweatherMap.animator(XweatherLayer.Radar.Standard)
 Call `.stop()` to pause on the current frame, or pass explicit offset
 strings (e.g. `"-30m"`, `"current"`) via `loadFrames(offsets: List<String>)`
 for full control.
+
+`loadFrames` only *starts* each frame's tile download — it doesn't wait for
+them to finish. Pass `onFramesReady` to defer enabling playback (e.g.
+disabling a play button, or hiding a loading spinner) until every frame
+actually has pixels, so you don't play through frames that pop in mid-loop:
+
+```kotlin
+xweatherMap.animator(XweatherLayer.Radar.Standard)
+    .loadFrames(count = 6, intervalMinutes = 10, onFramesReady = { playButton.isEnabled = true })
+```
 
 ### Attribution
 
@@ -141,6 +153,14 @@ yourself.
 The `sample-app` module in this repo is a minimal end-to-end consumer of the
 SDK. To run it:
 
-1. Add your Xweather `client_id`/`client_secret` where the sample app reads
-   its config.
+1. Add your Xweather credentials to the root `local.properties` (gitignored,
+   never committed):
+   ```properties
+   xweather.clientId=YOUR_CLIENT_ID
+   xweather.clientSecret=YOUR_CLIENT_SECRET
+   ```
+   Alternatively, set the `XWEATHER_CLIENT_ID` / `XWEATHER_CLIENT_SECRET`
+   environment variables. The sample app's `build.gradle.kts` injects
+   whichever is set into `R.string.xweather_client_id`/`xweather_client_secret`
+   at build time via `resValue`.
 2. `./gradlew :sample-app:installDebug`
