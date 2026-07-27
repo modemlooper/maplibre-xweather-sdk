@@ -38,11 +38,14 @@ Then add the dependency to your app module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.modemlooper:xweather-webview:<tag>")
+    implementation("com.github.modemlooper:maplibre-xweather-sdk:<tag>")
 }
 ```
 
 Replace `<tag>` with the [latest release tag](https://github.com/modemlooper/maplibre-xweather-sdk/releases).
+Note the artifact id is the repo name (`maplibre-xweather-sdk`), not the
+`xweather-webview` module name — JitPack packages this multi-module repo
+under repo-based coordinates.
 
 ## Usage
 
@@ -68,6 +71,11 @@ val xweatherWeb = XweatherWebMapController(findViewById(R.id.webMapView), config
 Keep credentials out of source control — load them from `BuildConfig`,
 `local.properties`, or your own secrets management. The SDK never stores or
 bundles credentials itself.
+
+`XweatherWebConfig` also takes an optional `minZoom` and `bounds` (a
+`XweatherMapBounds(north, south, east, west)`) to clamp the initial camera to
+a region of interest — `bounds` maps to MapLibre GL JS's native `maxBounds`,
+so panning stops hard at the edges instead of scrolling past them.
 
 `XweatherWebMapController` owns the `WebView`'s settings, loads the bundled
 map page (MapLibre GL JS + the real MapsGL JS SDK), and drives it via a JS
