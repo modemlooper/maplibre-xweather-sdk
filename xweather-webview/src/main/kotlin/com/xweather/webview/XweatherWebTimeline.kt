@@ -47,7 +47,21 @@ class XweatherWebTimeline internal constructor(private val webView: WebView) {
     /** Starts looping the timeline from its current position. */
     fun play() = evaluate("timelinePlay()")
 
-    /** Stops looping; the current frame remains visible. */
+    /** Resumes looping from the position it was [pause]d at. */
+    fun resume() = evaluate("timelineResume()")
+
+    /**
+     * Pauses the loop in place, leaving the current frame — and the playhead —
+     * exactly where they are. Resume with [play] or [resume]. Unlike [stop],
+     * this does not snap the playhead to the frame nearest the present time.
+     */
+    fun pause() = evaluate("timelinePause()")
+
+    /**
+     * Stops looping and moves the playhead to the frame closest to the present
+     * time (MapsGL's native `stop()` behavior). To pause without moving the
+     * playhead, use [pause] instead.
+     */
     fun stop() = evaluate("timelineStop()")
 
     /** Stops any running loop and moves to whichever frame is closest to [fraction] (0f..1f). */

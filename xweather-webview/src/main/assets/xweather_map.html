@@ -149,6 +149,8 @@
         controller.on('load:complete', function () { Android.onLoadComplete(); });
 
         controller.timeline.on('play', function () { Android.onTimelinePlay(); });
+        controller.timeline.on('resume', function () { Android.onTimelinePlay(); });
+        controller.timeline.on('pause', function () { Android.onTimelineStop(); });
         controller.timeline.on('stop', function () { Android.onTimelineStop(); });
         controller.timeline.on('advance', function (e) {
           var date = e.date ? e.date.toISOString() : '';
@@ -230,6 +232,8 @@
   }
 
   function timelinePlay() { if (isReady()) controller.timeline.play(); }
+  function timelineResume() { if (isReady()) controller.timeline.resume(); }
+  function timelinePause() { if (isReady()) controller.timeline.pause(); }
   function timelineStop() { if (isReady()) controller.timeline.stop(); }
   function timelineGoTo(fraction) { if (isReady()) controller.timeline.goTo(parseFloat(fraction)); }
 
