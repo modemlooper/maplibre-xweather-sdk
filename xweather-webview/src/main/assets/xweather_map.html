@@ -60,6 +60,12 @@
   function notifyControllerLoaded() {
     if (controllerLoaded) return;
     controllerLoaded = true;
+    // Android hosts that place this WebView inside a layout system with async/multi-pass
+    // sizing (e.g. Jetpack Compose) may not have given it its final size yet when `map` was
+    // constructed, leaving MapLibre GL JS with a stale viewport it never repaints correctly on
+    // its own. Forcing a resize once everything else is ready re-reads the container's actual
+    // current size, which is harmless (a no-op) when it was already correct.
+    map.resize();
     Android.onLoad();
   }
 
