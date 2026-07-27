@@ -48,6 +48,12 @@ class XweatherWebMapController(
     init {
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        // The map page loads from a file:// asset, which the fetch spec treats as opaque
+        // origin "null" — XWeather's tile API doesn't return an Access-Control-Allow-Origin
+        // for that, so cross-origin tile/style requests get blocked by CORS unless the
+        // WebView is told to treat this file:// page as having universal access.
+        webView.settings.allowFileAccessFromFileURLs = true
+        webView.settings.allowUniversalAccessFromFileURLs = true
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         val isDebuggable =
             (webView.context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
