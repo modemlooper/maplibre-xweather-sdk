@@ -7,9 +7,4 @@
     <string name="demo_style_url" translatable="false">https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json</string>
 
     <string name="timeline_play">Play timeline</string>
-
-    <string name="layer_menu_button">Map layers</string>
-    <string name="layer_radar">Radar</string>
-    <string name="layer_temperature">Temperature</string>
-    <string name="layer_wind_particles">Wind Particles</string>
 </resources>

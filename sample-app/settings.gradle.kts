@@ -19,8 +19,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "sample-app"
 
-include(":xweather-maplibre")
-project(":xweather-maplibre").projectDir = file("../xweather-maplibre")
-
 include(":xweather-webview")
 project(":xweather-webview").projectDir = file("../xweather-webview")

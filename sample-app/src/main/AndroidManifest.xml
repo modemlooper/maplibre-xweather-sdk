@@ -9,10 +9,6 @@
         android:theme="@style/Theme.XweatherSample">
 
         <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".WebMapActivity"
             android:exported="true">
             <intent-filter>

@@ -36,7 +36,7 @@ class WebMapActivity : AppCompatActivity() {
             zoom = AUSTRALIA_ZOOM,
         )
         xweatherWeb = XweatherWebMapController(webView, config)
-        timelineController.attachWebTimeline(xweatherWeb.timeline)
+        timelineController.attachTimeline(xweatherWeb.timeline)
 
         xweatherWeb.onLoad = { xweatherWeb.addLayer("radar") }
         xweatherWeb.onError = { message -> Log.e(TAG, "MapsGL error: $message") }

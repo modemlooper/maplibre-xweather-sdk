@@ -16,6 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "xweather-maplibre-sdk"
 
-include(":xweather-maplibre")
 include(":xweather-webview")
 include(":sample-app")

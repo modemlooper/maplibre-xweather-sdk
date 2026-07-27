@@ -1,6 +1,5 @@
 package com.xweather.maplibre.sample
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -8,13 +7,11 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import com.xweather.maplibre.XweatherTimeline
 import com.xweather.webview.XweatherWebTimeline
 import kotlin.math.roundToInt
 
@@ -23,12 +20,11 @@ private fun Context.dp(value: Float) = value * resources.displayMetrics.density
 /**
  * A self-contained "radar remote": a play/pause button, a loading spinner, and
  * an hour-tick ruler with a draggable knob, wired directly to a shared
- * [XweatherTimeline]. Drop it into any layout, call [attachTimeline] once the
- * timeline's first frames are loaded, and this view owns playback, scrubbing,
- * and the "Now" indicator end to end — hosts don't need their own play/pause
- * or scrub-tween logic. Additional layers can register with the same
- * [XweatherTimeline] afterwards (e.g. via a layer-toggle menu) and will
- * animate in sync with whatever this control is already doing.
+ * [XweatherWebTimeline]. Drop it into any layout, call [attachTimeline] once
+ * the timeline exists, and this view owns playback, scrubbing, and the "Now"
+ * indicator end to end — hosts don't need their own play/pause logic. The JS
+ * SDK's timeline already advances smoothly on its own, so the knob just
+ * mirrors [XweatherWebTimeline.position] directly.
  */
 class TimelineController @JvmOverloads constructor(
     context: Context,
@@ -76,15 +72,8 @@ class TimelineController @JvmOverloads constructor(
     private val playButton: ImageButton
     private val ruler: RulerView
 
-    private var timeline: XweatherTimeline? = null
-    private var webTimeline: XweatherWebTimeline? = null
-    private var frameCount: Int = 1
-    private var frameIntervalMillis: Long = 500L
+    private var timeline: XweatherWebTimeline? = null
     private var isPlaying = false
-    private var scrubAnimator: ValueAnimator? = null
-    private var scrubStep = 0f
-    private var scrubTarget = 0f
-    private var scrubRestartPending = false
 
     init {
         orientation = HORIZONTAL
@@ -140,50 +129,22 @@ class TimelineController @JvmOverloads constructor(
     }
 
     /**
-     * Attaches the shared [XweatherTimeline] this control plays/scrubs, hides
-     * the loading spinner, and enables the play button. Call this once, after
-     * the timeline's first registered layer(s) have finished their initial
-     * load (e.g. from [XweatherTimeline.onLoadComplete]) — layers registered
-     * with the same timeline later (see class doc) don't need to call this
-     * again; use [showLoading]/[hideLoading] for their loading state instead.
+     * Attaches the [XweatherWebTimeline] this control plays/scrubs. Can be
+     * called as soon as the timeline exists (no need to wait for a first
+     * load) — [showLoading]/[hideLoading] are driven by
+     * [XweatherWebTimeline.onLoadStart]/[XweatherWebTimeline.onLoadComplete]
+     * instead.
      */
-    fun attachTimeline(timeline: XweatherTimeline, frameIntervalMillis: Long) {
+    fun attachTimeline(timeline: XweatherWebTimeline) {
         this.timeline = timeline
-        this.webTimeline = null
-        this.frameCount = timeline.frameCount
-        this.frameIntervalMillis = frameIntervalMillis
-        timeline.onAdvance = { onTimelineAdvance() }
-        hideLoading()
-
-        // Frames load with every layer hidden (opacity 0); without an explicit
-        // seek nothing renders until the user presses play. The last loaded
-        // frame is always "current", so show it immediately and park the
-        // knob at the "Now" tick to match.
-        timeline.goTo(1f)
-        ruler.progress = ruler.nowProgress
-    }
-
-    /**
-     * Attaches a WebView-hosted [XweatherWebTimeline] instead of the native
-     * raster timeline. Unlike [attachTimeline], this can be called as soon as
-     * the timeline exists (no need to wait for a first load) — [showLoading]/
-     * [hideLoading] are driven by [XweatherWebTimeline.onLoadStart]/
-     * [XweatherWebTimeline.onLoadComplete] instead. The JS SDK already
-     * advances smoothly on its own, so unlike the raster timeline's discrete
-     * frame swaps, the knob mirrors [XweatherWebTimeline.position] directly
-     * with no tweening.
-     */
-    fun attachWebTimeline(webTimeline: XweatherWebTimeline) {
-        this.webTimeline = webTimeline
-        this.timeline = null
-        webTimeline.onAdvance = { ruler.progress = webTimeline.position }
-        webTimeline.onLoadStart = { showLoading() }
-        webTimeline.onLoadComplete = { hideLoading() }
-        webTimeline.onRangeChange = {
-            startHour = webTimeline.startHour
-            endHour = webTimeline.endHour
-            nowProgress = webTimeline.nowFraction
-            ruler.progress = webTimeline.nowFraction
+        timeline.onAdvance = { ruler.progress = timeline.position }
+        timeline.onLoadStart = { showLoading() }
+        timeline.onLoadComplete = { hideLoading() }
+        timeline.onRangeChange = {
+            startHour = timeline.startHour
+            endHour = timeline.endHour
+            nowProgress = timeline.nowFraction
+            ruler.progress = timeline.nowFraction
         }
     }
 
@@ -201,56 +162,13 @@ class TimelineController @JvmOverloads constructor(
 
     /** Stops playback/scrubbing; call from the host's `onDestroy`. */
     fun release() {
-        scrubAnimator?.cancel()
         timeline?.stop()
-        webTimeline?.stop()
     }
 
     private fun togglePlayback() {
         isPlaying = !isPlaying
         playButton.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
-
-        val webTimeline = this.webTimeline
-        if (webTimeline != null) {
-            if (isPlaying) webTimeline.play() else webTimeline.stop()
-            return
-        }
-
-        if (isPlaying) {
-            // Resume the sweep from wherever the knob is currently parked (e.g. "Now")
-            // rather than resetting to the first frame, so the first lap is shorter.
-            scrubStep = 1f / (frameCount - 1).coerceAtLeast(1)
-            scrubTarget = ruler.progress
-            scrubRestartPending = false
-            timeline?.play(intervalMillis = frameIntervalMillis)
-        } else {
-            scrubAnimator?.cancel()
-            timeline?.stop()
-        }
-    }
-
-    /**
-     * Tweens the knob smoothly between frames while playing. Guarded on
-     * [isPlaying] because [XweatherTimeline.onAdvance] also fires for
-     * non-playback position changes (e.g. [attachTimeline]'s initial seek),
-     * which should snap the knob directly rather than tween it.
-     */
-    private fun onTimelineAdvance() {
-        if (!isPlaying) return
-        if (scrubRestartPending) {
-            // Reached the end last tick: snap to the beginning instead of tweening backwards.
-            scrubRestartPending = false
-            scrubAnimator?.cancel()
-            scrubTarget = 0f
-            ruler.progress = 0f
-        } else {
-            scrubTarget += scrubStep
-            if (scrubTarget >= 1f) {
-                scrubTarget = 1f
-                scrubRestartPending = true
-            }
-            animateScrubTo(scrubTarget)
-        }
+        if (isPlaying) timeline?.play() else timeline?.stop()
     }
 
     private fun onRulerScrub(fraction: Float, fromUser: Boolean) {
@@ -258,25 +176,10 @@ class TimelineController @JvmOverloads constructor(
             if (isPlaying) {
                 isPlaying = false
                 playButton.setImageResource(R.drawable.ic_play)
-                scrubAnimator?.cancel()
             }
             timeline?.goTo(fraction)
-            webTimeline?.goTo(fraction)
         }
         listener?.onProgressChanged(fraction, fromUser)
-    }
-
-    /** Smoothly moves the scrubber to [target] over one frame interval, instead of jumping. */
-    private fun animateScrubTo(target: Float) {
-        scrubAnimator?.cancel()
-        scrubAnimator = ValueAnimator.ofFloat(ruler.progress, target).apply {
-            duration = frameIntervalMillis
-            interpolator = LinearInterpolator()
-            addUpdateListener {
-                ruler.progress = it.animatedValue as Float
-            }
-            start()
-        }
     }
 }
 

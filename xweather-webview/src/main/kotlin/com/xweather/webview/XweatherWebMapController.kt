@@ -12,11 +12,10 @@ private const val ASSET_URL = "file:///android_asset/xweather_map.html"
 
 /**
  * Public entry point for driving Xweather's real MapsGL JS SDK from Kotlin.
- * Where [com.xweather.maplibre.XweatherMapController] wraps MapLibre
- * Android's native raster layers, this wraps a [WebView] hosting MapLibre GL
- * JS + `aerisweather.mapsgl.js` — the same vector-rendered weather engine
- * Xweather ships for iOS/web — so host apps get feature parity without any
- * native GPU rendering code of our own.
+ * Wraps a [WebView] hosting MapLibre GL JS + `aerisweather.mapsgl.js` — the
+ * same vector-rendered weather engine Xweather ships for iOS/web — so host
+ * apps get MapsGL feature parity without any native GPU rendering code of
+ * our own (MapsGL's actual rendering engine is closed-source).
  *
  * [webView] is owned by the caller (add it to your layout as normal); this
  * controller configures its settings, loads the bundled map page, and drives
@@ -37,9 +36,9 @@ class XweatherWebMapController(
     var onError: ((message: String) -> Unit)? = null
 
     /**
-     * The shared animation clock for this map — mirrors
-     * [com.xweather.maplibre.XweatherMapController.timeline], but backed by
-     * the JS SDK's own `controller.timeline`.
+     * The shared animation clock for this map, backed by the JS SDK's own
+     * `controller.timeline` — registering a layer via [addLayer] animates it
+     * in lockstep with every other registered layer.
      */
     val timeline: XweatherWebTimeline = XweatherWebTimeline(webView)
 

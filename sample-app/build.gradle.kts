@@ -58,8 +58,7 @@ android {
 
 dependencies {
     // Local module reference for now; once published, consumers would instead
-    // depend on `com.github.<org>:xweather-maplibre-sdk:<tag>` via JitPack.
-    implementation(project(":xweather-maplibre"))
+    // depend on `com.github.<org>:xweather-webview:<tag>` via JitPack.
     implementation(project(":xweather-webview"))
 
     implementation(libs.androidx.core.ktx)

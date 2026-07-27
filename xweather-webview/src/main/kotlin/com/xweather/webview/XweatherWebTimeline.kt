@@ -3,10 +3,9 @@ package com.xweather.webview
 import android.webkit.WebView
 
 /**
- * Mirrors [com.xweather.maplibre.XweatherTimeline]'s shape, but forwards to
- * the real MapsGL JS SDK's `controller.timeline` — which natively animates
- * every added weather layer in lockstep, so unlike the raster-tile SDK's
- * timeline this doesn't need to simulate frames itself.
+ * Forwards to the real MapsGL JS SDK's `controller.timeline`, which natively
+ * animates every added weather layer in lockstep — one shared clock, driven
+ * by [play]/[stop]/[goTo].
  *
  * Get an instance via [XweatherWebMapController.timeline] rather than
  * constructing one directly.

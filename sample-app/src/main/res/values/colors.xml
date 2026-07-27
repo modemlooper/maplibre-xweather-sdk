@@ -11,8 +11,4 @@
     <color name="play_button_icon">#1C1C1E</color>
     <color name="play_ring_progress">#3D8BFF</color>
     <color name="play_ring_track">#00E4E4E6</color>
-    <color name="layer_menu_button_bg">#E4E4E6</color>
-    <color name="layer_menu_button_icon">#1C1C1E</color>
-    <color name="layer_menu_card_bg">#FFFFFF</color>
-    <color name="layer_menu_text">#1C1C1E</color>
 </resources>
