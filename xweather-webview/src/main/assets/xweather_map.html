@@ -5,7 +5,7 @@
 <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Xweather MapsGL</title>
 <style>
-  html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; }
+  html, body, #map { margin: 0; padding: 0; width: 100%; }
 </style>
 <script>
   // Older Android System WebView builds (pre-Chromium 92, ~2021) lack
@@ -57,14 +57,30 @@
     };
   })();
 
+  // Hosts that place this WebView inside a layout system with async/multi-pass sizing (e.g.
+  // Jetpack Compose's AndroidView) can leave html/body/#map's height stuck at 0 — even CSS
+  // `height: 100%`/`100vh` computes to 0px there (confirmed via devtools: window.innerHeight
+  // reports correctly, but getComputedStyle(document.documentElement).height does not), so
+  // this sets real pixel heights from window.innerHeight directly instead of trusting CSS.
+  function sizeMapContainer() {
+    var h = window.innerHeight + 'px';
+    document.documentElement.style.height = h;
+    document.body.style.height = h;
+    document.getElementById('map').style.height = h;
+  }
+
+  window.addEventListener('resize', function () {
+    sizeMapContainer();
+    if (map) map.resize();
+  });
+
   function notifyControllerLoaded() {
     if (controllerLoaded) return;
     controllerLoaded = true;
-    // Android hosts that place this WebView inside a layout system with async/multi-pass
-    // sizing (e.g. Jetpack Compose) may not have given it its final size yet when `map` was
-    // constructed, leaving MapLibre GL JS with a stale viewport it never repaints correctly on
-    // its own. Forcing a resize once everything else is ready re-reads the container's actual
-    // current size, which is harmless (a no-op) when it was already correct.
+    // Re-apply the explicit sizing and force a resize once everything else is ready — re-reads
+    // the container's actual current size, which is harmless (a no-op) when it was already
+    // correct.
+    sizeMapContainer();
     map.resize();
     Android.onLoad();
   }
@@ -73,6 +89,7 @@
     clientId, clientSecret, styleUrl, centerLon, centerLat, zoom,
     minZoom, boundsNorth, boundsSouth, boundsEast, boundsWest,
   ) {
+    sizeMapContainer();
     var mapOptions = {
       container: 'map',
       style: styleUrl,
