@@ -30,7 +30,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.higginsstormchasing.app"
+        applicationId = "com.xweather.maplibre.sample"
         minSdk = 23
         targetSdk = 35
         versionCode = 1
