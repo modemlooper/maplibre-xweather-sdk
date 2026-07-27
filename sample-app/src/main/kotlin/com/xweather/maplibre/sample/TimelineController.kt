@@ -258,11 +258,6 @@ private class RulerView(context: Context) : View(context) {
         textAlign = Paint.Align.CENTER
         isFakeBoldText = true
     }
-    private val nowDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.timeline_now)
-        style = Paint.Style.FILL
-    }
-
     private var isDragging = false
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -317,13 +312,14 @@ private class RulerView(context: Context) : View(context) {
             }
         }
 
-        // Persistent "Now" tick + label: always shown at nowProgress, independent
+        // Persistent "Now" label + tick: always shown at nowProgress, independent
         // of wherever the scrub knob currently sits, so "now" stays visible while
         // scrubbing or playing instead of disappearing once the knob moves off it.
+        // The tick sits between the label and the track, above it rather than
+        // among the hour ticks below.
         val labelY = paddingTop + dp(8f)
-        canvas.drawLine(nowX, tickTop, nowX, tickTop + majorTickLength, nowTickPaint)
         canvas.drawText("Now", nowX, labelY, nowTextPaint)
-        canvas.drawCircle(nowX, labelY + dp(6f), dp(1.5f), nowDotPaint)
+        canvas.drawLine(nowX, labelY + dp(4f), nowX, trackY, nowTickPaint)
 
         canvas.drawCircle(knobX, trackY, knobRadius, knobPaint)
     }
