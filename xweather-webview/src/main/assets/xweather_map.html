@@ -63,13 +63,26 @@
     Android.onLoad();
   }
 
-  function configure(clientId, clientSecret, styleUrl, centerLon, centerLat, zoom) {
-    map = new maplibregl.Map({
+  function configure(
+    clientId, clientSecret, styleUrl, centerLon, centerLat, zoom,
+    minZoom, boundsNorth, boundsSouth, boundsEast, boundsWest,
+  ) {
+    var mapOptions = {
       container: 'map',
       style: styleUrl,
       center: [parseFloat(centerLon), parseFloat(centerLat)],
       zoom: parseFloat(zoom),
-    });
+    };
+    if (minZoom !== null && minZoom !== undefined) {
+      mapOptions.minZoom = parseFloat(minZoom);
+    }
+    if (boundsNorth !== null && boundsNorth !== undefined) {
+      mapOptions.maxBounds = [
+        [parseFloat(boundsWest), parseFloat(boundsSouth)],
+        [parseFloat(boundsEast), parseFloat(boundsNorth)],
+      ];
+    }
+    map = new maplibregl.Map(mapOptions);
 
     map.on('error', function (e) {
       Android.onError('map error: ' + (e && e.error ? e.error.message : JSON.stringify(e)));

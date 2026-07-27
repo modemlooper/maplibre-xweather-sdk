@@ -55,10 +55,14 @@ class XweatherWebMapController(
         webView.addJavascriptInterface(Bridge(), "Android")
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String) {
+                val bounds = config.bounds
                 evaluate(
                     "configure(${jsString(config.clientId)}, " +
                         "${jsString(config.clientSecret)}, ${jsString(config.styleUrl)}, " +
-                        "${config.centerLon}, ${config.centerLat}, ${config.zoom})",
+                        "${config.centerLon}, ${config.centerLat}, ${config.zoom}, " +
+                        "${config.minZoom ?: "null"}, " +
+                        "${bounds?.north ?: "null"}, ${bounds?.south ?: "null"}, " +
+                        "${bounds?.east ?: "null"}, ${bounds?.west ?: "null"})",
                 )
             }
         }

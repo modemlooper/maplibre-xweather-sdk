@@ -15,4 +15,18 @@ data class XweatherWebConfig(
     val centerLat: Double = 20.0,
     val centerLon: Double = 0.0,
     val zoom: Double = 2.0,
+    val minZoom: Double? = null,
+    val bounds: XweatherMapBounds? = null,
+)
+
+/**
+ * A hard camera-pan clamp (MapLibre GL JS's `maxBounds`) — the map won't
+ * scroll past these edges. Pass to [XweatherWebConfig.bounds] to keep the
+ * map framed on a region of interest.
+ */
+data class XweatherMapBounds(
+    val north: Double,
+    val south: Double,
+    val east: Double,
+    val west: Double,
 )
