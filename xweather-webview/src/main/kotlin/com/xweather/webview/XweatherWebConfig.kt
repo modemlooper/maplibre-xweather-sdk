@@ -7,6 +7,13 @@ package com.xweather.webview
  *
  * [styleUrl] defaults to a public, key-free MapLibre style so the SDK works
  * out of the box; pass your own for production use.
+ *
+ * MapLibre's on-map attribution control is disabled (there's no toggle for
+ * this — it's always off), so host apps must surface the required
+ * attribution themselves elsewhere in the UI (e.g. a Settings/About screen):
+ * "Powered by Vaisala Xweather" hyperlinked to https://www.xweather.com/,
+ * plus whatever [styleUrl]'s basemap provider requires (e.g. CARTO styles
+ * require "© CARTO" / "© OpenStreetMap contributors").
  */
 data class XweatherWebConfig(
     val clientId: String,

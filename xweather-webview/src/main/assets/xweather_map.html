@@ -95,6 +95,11 @@
       style: styleUrl,
       center: [parseFloat(centerLon), parseFloat(centerLat)],
       zoom: parseFloat(zoom),
+      // Host apps are responsible for surfacing the required attribution
+      // (e.g. in a Settings/About screen) themselves — see XweatherWebConfig
+      // docs. Disabling MapLibre's built-in control just removes the
+      // on-map UI chrome, not the legal requirement to attribute.
+      attributionControl: false,
     };
     if (minZoom !== null && minZoom !== undefined) {
       mapOptions.minZoom = parseFloat(minZoom);
