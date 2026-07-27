@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Xweather MapsGL</title>
+<style>
+  html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; }
+</style>
+<script>
+  // Older Android System WebView builds (pre-Chromium 92, ~2021) lack
+  // Array.prototype.at/TypedArray.prototype.at, which the MapsGL bundle
+  // uses unconditionally — polyfill it so the SDK still works there.
+  (function () {
+    function at(n) {
+      n = Math.trunc(n) || 0;
+      if (n < 0) n += this.length;
+      if (n < 0 || n >= this.length) return undefined;
+      return this[n];
+    }
+    [
+      Array,
+      String,
+      Int8Array, Uint8Array, Uint8ClampedArray,
+      Int16Array, Uint16Array,
+      Int32Array, Uint32Array,
+      Float32Array, Float64Array,
+    ].forEach(function (ctor) {
+      if (ctor && ctor.prototype && !ctor.prototype.at) {
+        Object.defineProperty(ctor.prototype, 'at', {
+          value: at, writable: true, enumerable: false, configurable: true,
+        });
+      }
+    });
+  })();
+</script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<link href="https://cdn.aerisapi.com/sdk/js/mapsgl/latest/aerisweather.mapsgl.css" rel="stylesheet" />
+<script defer src="https://cdn.aerisapi.com/sdk/js/mapsgl/latest/aerisweather.mapsgl.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  var map;
+  var controller;
+  var controllerLoaded = false;
+
+  (function () {
+    var originalError = console.error;
+    console.error = function () {
+      originalError.apply(console, arguments);
+      try { Android.onError(Array.prototype.slice.call(arguments).join(' ')); } catch (e) {}
+    };
+  })();
+
+  function notifyControllerLoaded() {
+    if (controllerLoaded) return;
+    controllerLoaded = true;
+    Android.onLoad();
+  }
+
+  function configure(clientId, clientSecret, styleUrl, centerLon, centerLat, zoom) {
+    map = new maplibregl.Map({
+      container: 'map',
+      style: styleUrl,
+      center: [parseFloat(centerLon), parseFloat(centerLat)],
+      zoom: parseFloat(zoom),
+    });
+
+    map.on('error', function (e) {
+      Android.onError('map error: ' + (e && e.error ? e.error.message : JSON.stringify(e)));
+    });
+
+    map.on('load', function () {
+      try {
+        // Hour-aligned 3-hour window straddling "now" (so it lands within the
+        // middle third of the range, not pinned to an edge), passed at
+        // construction time — matching Xweather's own `animation: { start,
+        // end }` usage in their change-timeline-range.html example, rather
+        // than mutating controller.timeline.startDate/endDate after the fact.
+        var now = new Date();
+        var startBoundary = new Date(now);
+        startBoundary.setHours(startBoundary.getHours() - 1, 0, 0, 0);
+        var endBoundary = new Date(startBoundary.getTime() + 3 * 60 * 60 * 1000);
+
+        var account = new aerisweather.mapsgl.Account(clientId, clientSecret);
+        controller = new aerisweather.mapsgl.MaplibreMapController(map, {
+          account,
+          animation: { start: startBoundary, end: endBoundary },
+        });
+
+        controller.on('load', notifyControllerLoaded);
+        // Some SDK versions may resolve readiness before this listener attaches;
+        // this covers that race without risking a double `onLoad` (guarded above).
+        if (controller.isReady) notifyControllerLoaded();
+
+        controller.on('click', function (e) {
+          controller.queryPromise(e.coord).then(function (result) {
+            Android.onMapClick(e.coord.lat, e.coord.lon, JSON.stringify(result || {}));
+          });
+        });
+
+        controller.on('load:start', function () { Android.onLoadStart(); });
+        controller.on('load:complete', function () { Android.onLoadComplete(); });
+
+        controller.timeline.on('play', function () { Android.onTimelinePlay(); });
+        controller.timeline.on('stop', function () { Android.onTimelineStop(); });
+        controller.timeline.on('advance', function (e) {
+          var date = e.date ? e.date.toISOString() : '';
+          Android.onTimelineAdvance(e.position, date);
+        });
+
+        var totalMs = endBoundary.getTime() - startBoundary.getTime();
+        var nowFraction = (now.getTime() - startBoundary.getTime()) / totalMs;
+        var startHour = startBoundary.getHours();
+        Android.onTimelineRange(startHour, startHour + 3, nowFraction);
+      } catch (ex) {
+        Android.onError('configure failed: ' + String(ex));
+      }
+    });
+  }
+
+  function isReady() {
+    if (controller) return true;
+    Android.onError('MapsGL controller not ready yet');
+    return false;
+  }
+
+  function addLayer(code, opacity) {
+    if (!isReady()) return;
+    try {
+      controller.addWeatherLayer(code, { opacity: parseFloat(opacity) });
+    } catch (ex) {
+      Android.onError(String(ex));
+    }
+  }
+
+  function removeLayer(code) {
+    if (!isReady()) return;
+    try {
+      controller.removeWeatherLayer(code);
+    } catch (ex) {
+      Android.onError(String(ex));
+    }
+  }
+
+  function setOpacity(code, opacity) {
+    if (!isReady()) return;
+    try {
+      controller.addWeatherLayer(code, { opacity: parseFloat(opacity) });
+    } catch (ex) {
+      Android.onError(String(ex));
+    }
+  }
+
+  function hasLayer(code, requestId) {
+    if (!isReady()) return;
+    Android.onHasLayerResult(requestId, controller.hasWeatherLayer(code));
+  }
+
+  function timelinePlay() { if (isReady()) controller.timeline.play(); }
+  function timelineStop() { if (isReady()) controller.timeline.stop(); }
+  function timelineGoTo(fraction) { if (isReady()) controller.timeline.goTo(parseFloat(fraction)); }
+
+  window.onerror = function (message) {
+    Android.onError(String(message));
+  };
+
+  window.addEventListener('unhandledrejection', function (event) {
+    Android.onError('unhandled rejection: ' + (event.reason ? String(event.reason) : ''));
+  });
+</script>
+</body>
+</html>

@@ -115,30 +115,60 @@ a typed constant, use the escape hatch:
 xweatherMap.addLayer(XweatherLayer.Custom("some-layer-code"))
 ```
 
-### 5. Animate a layer (frame loop)
+### Adding/removing/toggling layers by name
 
-Xweather's raster tiles have no built-in timeline, so `XweatherAnimator`
-pre-loads one source/layer per time offset and toggles opacity between them:
-
-```kotlin
-xweatherMap.animator(XweatherLayer.Radar.Standard)
-    .loadFrames(count = 6, intervalMinutes = 10)
-    .play()
-```
-
-Call `.stop()` to pause on the current frame, or pass explicit offset
-strings (e.g. `"-30m"`, `"current"`) via `loadFrames(offsets: List<String>)`
-for full control.
-
-`loadFrames` only *starts* each frame's tile download — it doesn't wait for
-them to finish. Pass `onFramesReady` to defer enabling playback (e.g.
-disabling a play button, or hiding a loading spinner) until every frame
-actually has pixels, so you don't play through frames that pop in mid-loop:
+If the layer to show is only known at runtime (e.g. driven by app config or
+user input) rather than a compile-time constant, `addLayer`/`removeLayer`/
+`setOpacity` also accept a raw layer code `String` directly — no need to wrap
+it in `XweatherLayer.Custom` yourself:
 
 ```kotlin
-xweatherMap.animator(XweatherLayer.Radar.Standard)
-    .loadFrames(count = 6, intervalMinutes = 10, onFramesReady = { playButton.isEnabled = true })
+xweatherMap.addLayer("radar", opacity = 0.8f)
+
+// Turn it off later
+xweatherMap.removeLayer("radar")
+
+// Check whether it's currently on
+xweatherMap.hasLayer("radar")
 ```
+
+### 5. Animate layers (shared timeline)
+
+Xweather's raster tiles have no built-in timeline, so `XweatherMapController.timeline`
+pre-loads one source/layer per time offset per registered layer and toggles
+opacity between them. This is a single shared clock — every layer registered
+with it animates together, in sync, driven by one `play()`/`stop()`/`goTo()`
+(mirroring `mapController.timeline` in Xweather's MapsGL Apple SDK), rather
+than each layer running its own independent loop:
+
+```kotlin
+val timeline = xweatherMap.timeline
+timeline.configure(frameCount = 12, frameIntervalMinutes = 15)
+timeline.addLayer(XweatherLayer.Radar.Standard)
+timeline.play()
+```
+
+Call `.stop()` to pause on the current frame, or `.goTo(fraction)` to scrub
+to an arbitrary 0f..1f position across the configured range.
+
+Registering a layer only *starts* its frames' tile downloads — it doesn't
+wait for them to finish. Use `onLoadStart`/`onLoadComplete` to defer enabling
+playback (e.g. disabling a play button, or showing/hiding a loading spinner)
+until every registered layer's frames actually have pixels, so you don't
+play through frames that pop in mid-loop:
+
+```kotlin
+timeline.onLoadStart = { spinner.isVisible = true }
+timeline.onLoadComplete = {
+    spinner.isVisible = false
+    timeline.play()
+}
+timeline.addLayer(XweatherLayer.Radar.Standard)
+```
+
+Add more layers later (e.g. from a layer-toggle menu) with `timeline.addLayer(...)` /
+`timeline.removeLayer(...)` — they join the same running clock instead of
+starting their own.
 
 ### Attribution
 
@@ -147,6 +177,44 @@ xweatherMap.animator(XweatherLayer.Radar.Standard)
 xweather.com) on every source it creates, so it shows up automatically
 wherever your map surfaces source attribution. You don't need to add this
 yourself.
+
+## WebView-based MapsGL integration (`xweather-webview`)
+
+The module above wraps Xweather's **Raster Maps API** — static XYZ tile
+imagery, not Xweather's vector-rendered **MapsGL** engine (the same engine
+that powers Xweather's iOS/web SDKs: GPU-rendered weather layers,
+particle-animated wind, click-to-query, legends). MapsGL's actual rendering
+engine is closed-source, so it can't be ported to Android directly — but
+Xweather ships it as a JavaScript SDK, and `xweather-webview` embeds that
+real JS SDK (MapLibre GL JS + `aerisweather.mapsgl.js`) inside a `WebView`,
+bridged to Kotlin. This gets you MapsGL feature parity with iOS/web without
+reimplementing any GPU rendering code.
+
+```kotlin
+val config = XweatherWebConfig(
+    clientId = "YOUR_CLIENT_ID",
+    clientSecret = "YOUR_CLIENT_SECRET",
+)
+val xweatherWeb = XweatherWebMapController(webView, config)
+
+xweatherWeb.onLoad = {
+    xweatherWeb.addLayer("radar")
+}
+
+xweatherWeb.timeline.play()
+```
+
+`XweatherWebMapController`/`XweatherWebTimeline` mirror the shape of
+`XweatherMapController`/`XweatherTimeline` above (`addLayer`/`removeLayer`/
+`setOpacity`/`timeline.play()`/`stop()`/`goTo()`), but every call is
+forwarded into the JS SDK via `WebView.evaluateJavascript`, and JS-side
+events (load, load-start/complete, timeline advance, map clicks) come back
+through a `@JavascriptInterface` bridge. Calls made before `onLoad` fires are
+reported via `onError` rather than applied — wait for `onLoad` before adding
+layers.
+
+The `sample-app` module's "MapsGL Web Demo" button (`WebMapActivity`) is a
+minimal working example of this module.
 
 ## Sample app
 

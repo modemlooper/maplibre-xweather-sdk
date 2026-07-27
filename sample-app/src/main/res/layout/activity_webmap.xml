@@ -4,20 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <org.maplibre.android.maps.MapView
-        android:id="@+id/mapView"
+    <WebView
+        android:id="@+id/webMapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.xweather.maplibre.sample.LayerMenuButton
-        android:id="@+id/layerMenuButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_margin="16dp" />
-
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/timelineCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -27,9 +19,10 @@
         app:cardElevation="8dp">
 
         <com.xweather.maplibre.sample.TimelineController
-            android:id="@+id/timelineController"
+            android:id="@+id/webTimelineController"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
     </com.google.android.material.card.MaterialCardView>
 
 </FrameLayout>
