@@ -4,6 +4,7 @@ import android.content.pm.ApplicationInfo
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.view.doOnLayout
 import java.util.concurrent.atomic.AtomicInteger
 import org.json.JSONObject
 
@@ -70,7 +71,16 @@ class XweatherWebMapController(
                 )
             }
         }
-        webView.loadUrl(ASSET_URL)
+        // The WebView isn't guaranteed to have its final size yet at construction time — in
+        // particular, hosts that place it inside Jetpack Compose's AndroidView can attach it to
+        // the window before Compose finishes laying it out. Loading the page while the WebView
+        // is still 0-sized lets MapLibre GL JS read a bogus viewport at construction time, which
+        // it never recovers from even once the WebView is resized correctly a moment later.
+        // doOnLayout runs immediately if a layout pass has already happened (the common case for
+        // a plain XML-inflated WebView) and otherwise waits for the next one — unlike a raw
+        // ViewTreeObserver listener, it's safe to register before the view is attached to a
+        // window.
+        webView.doOnLayout { webView.loadUrl(ASSET_URL) }
     }
 
     /**

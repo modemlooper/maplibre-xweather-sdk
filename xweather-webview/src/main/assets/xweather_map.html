@@ -88,17 +88,7 @@
       Android.onError('map error: ' + (e && e.error ? e.error.message : JSON.stringify(e)));
     });
 
-    var mapDiv = document.getElementById('map');
-    var rect = mapDiv.getBoundingClientRect();
-    Android.onError('DEBUG init size: div=' + rect.width + 'x' + rect.height +
-      ' window=' + window.innerWidth + 'x' + window.innerHeight +
-      ' canvas=' + (map.getCanvas().width) + 'x' + (map.getCanvas().height));
-
     map.on('load', function () {
-      var rect2 = mapDiv.getBoundingClientRect();
-      Android.onError('DEBUG load size: div=' + rect2.width + 'x' + rect2.height +
-        ' canvas=' + (map.getCanvas().width) + 'x' + (map.getCanvas().height) +
-        ' canvasStyle=' + map.getCanvas().style.width + 'x' + map.getCanvas().style.height);
       try {
         // Hour-aligned 3-hour window straddling "now" (so it lands within the
         // middle third of the range, not pinned to an edge), passed at
