@@ -70,9 +70,23 @@ class XweatherWebMapController(
      * updates its opacity if already added. Calls made before [onLoad] fires
      * are reported via [onError] instead of applied — wait for [onLoad]
      * before adding layers.
+     *
+     * [beforeId], if given, places the layer directly beneath an existing
+     * map layer — either another weather layer's code (e.g. `"radar"`) or
+     * the id of a layer already in the base map style (e.g. an admin
+     * boundary or label layer), letting you stack weather layers above or
+     * below specific basemap features. Omit it to add the layer above
+     * everything else, which is also how already-added layers stay on top
+     * across repeated calls (e.g. re-adding `"radar"` always restores it to
+     * the very top). An unrecognized id is ignored, falling back to that
+     * default. Mirrors the JS SDK's own
+     * `controller.addWeatherLayer(id, overrides, beforeId)`.
      */
-    fun addLayer(code: String, opacity: Float = 1f) =
-        evaluate("addLayer(${jsString(code)}, $opacity)")
+    fun addLayer(code: String, opacity: Float = 1f, beforeId: String? = null) =
+        evaluate(
+            "addLayer(${jsString(code)}, $opacity, " +
+                "${beforeId?.let { jsString(it) } ?: "null"})",
+        )
 
     /** Removes a previously added weather layer. */
     fun removeLayer(code: String) = evaluate("removeLayer(${jsString(code)})")

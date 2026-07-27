@@ -45,6 +45,9 @@
   var map;
   var controller;
   var controllerLoaded = false;
+  // code -> WebGLLayer | WebGLLayer[] returned by addWeatherLayer, so a later
+  // addLayer() call can stack another layer relative to this one by code.
+  var addedLayers = {};
 
   (function () {
     var originalError = console.error;
@@ -127,10 +130,35 @@
     return false;
   }
 
-  function addLayer(code, opacity) {
+  // The last layer in a WebGLLayer[] is the topmost of that group (they're
+  // appended in the order MapsGL builds them), so it's the right handle to
+  // stack another layer directly beneath.
+  function topLayerId(layer) {
+    if (!layer) return undefined;
+    var arr = Array.isArray(layer) ? layer : [layer];
+    var last = arr[arr.length - 1];
+    return last ? last.id : undefined;
+  }
+
+  // beforeId may be another weather layer's code (resolved to its current
+  // generated map layer id) or the id of an existing base-map style layer.
+  // Unrecognized ids are dropped so the layer still gets added, just without
+  // the requested placement, instead of failing the whole call.
+  function resolveBeforeId(beforeId) {
+    if (!beforeId) return undefined;
+    if (addedLayers[beforeId]) return topLayerId(addedLayers[beforeId]);
+    if (map.getLayer(beforeId)) return beforeId;
+    return undefined;
+  }
+
+  function addLayer(code, opacity, beforeId) {
     if (!isReady()) return;
     try {
-      controller.addWeatherLayer(code, { opacity: parseFloat(opacity) });
+      addedLayers[code] = controller.addWeatherLayer(
+        code,
+        { opacity: parseFloat(opacity) },
+        resolveBeforeId(beforeId),
+      );
     } catch (ex) {
       Android.onError(String(ex));
     }
@@ -140,6 +168,7 @@
     if (!isReady()) return;
     try {
       controller.removeWeatherLayer(code);
+      delete addedLayers[code];
     } catch (ex) {
       Android.onError(String(ex));
     }

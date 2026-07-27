@@ -7,4 +7,15 @@
     <string name="demo_style_url" translatable="false">https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json</string>
 
     <string name="timeline_play">Play timeline</string>
+
+    <string name="layers_button">Show or hide weather layers</string>
+    <string name="layers_dialog_title">Layers</string>
+    <string-array name="layer_labels">
+        <item>Radar</item>
+        <item>Satellite</item>
+        <item>Wind</item>
+        <item>Lightning</item>
+        <item>Hail</item>
+        <item>Temperature</item>
+    </string-array>
 </resources>
