@@ -1,7 +1,6 @@
 package com.xweather.webview
 
 import android.content.pm.ApplicationInfo
-import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -54,7 +53,11 @@ class XweatherWebMapController(
         // WebView is told to treat this file:// page as having universal access.
         webView.settings.allowFileAccessFromFileURLs = true
         webView.settings.allowUniversalAccessFromFileURLs = true
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        // Deliberately not forcing LAYER_TYPE_HARDWARE here: WebView is hardware-accelerated
+        // by default already, and forcing it explicitly conflicts with Jetpack Compose's own
+        // RenderNode-based compositing when this WebView is hosted inside an AndroidView —
+        // the WebGL canvas ends up never actually painting (stays blank) even though the page
+        // loads and the JS SDK runs normally.
         val isDebuggable =
             (webView.context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         WebView.setWebContentsDebuggingEnabled(isDebuggable)
